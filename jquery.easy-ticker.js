@@ -46,6 +46,7 @@
 		s.queue = {};
 		s.queue.add = new Array;
 		s.queue.remove = new Array;
+		s.queue.update = new Array;
 		s.dummy = {
 			init: 0,
 			current: 0,
@@ -239,15 +240,24 @@
 						});
 					}
 				}
+
+				// Cleanup from undefined entries
+				var cQueueAdd = new Array;
+				$.each(s.queue.add, function(no, html) {
+					if(typeof(html) == 'object') {
+						cQueueAdd[no] = html;
+					}
+				});
+				s.queue.add = cQueueAdd;
 			}
 
 			if(s.queue.remove) {
-				itemLast = s.targ.children(':last-child').data('itemno')
+				itemLast = s.targ.children(':last-child');
 
-				if(typeof(s.queue.remove[itemLast]) == 'object') {
-					itemHtml = s.queue.remove[itemLast];
+				if(typeof(s.queue.remove[itemLast.data('itemno')]) == 'object') {
+					itemHtml = s.queue.remove[itemLast.data('itemno')];
 					$(itemHtml).remove();
-					delete s.queue.remove[itemLast]
+					delete s.queue.remove[itemLast.data('itemno')]
 				}
 
 				// Cleanup from undefined entries
@@ -258,6 +268,25 @@
 					}
 				});
 				s.queue.remove = cQueueRemove;
+			}
+
+			if(s.queue.update) {
+
+				itemLast = s.targ.children(':last-child');
+				if(typeof(s.queue.update[itemLast.data('itemno')]) == 'object') {
+					itemCurrent = itemLast;
+					$(itemCurrent).replaceWith(s.queue.update[itemLast.data('itemno')]);
+					delete s.queue.update[itemLast.data('itemno')]
+				}
+
+				// Cleanup from undefined entries
+				var cQueueUpdate = new Array;
+				$.each(s.queue.update, function(no, html) {
+					if(typeof(html) == 'object') {
+						cQueueUpdate[no] = html;
+					}
+				});
+				s.queue.update = cQueueUpdate;
 			}
 		}
 
@@ -338,6 +367,7 @@
 			queue = queue || false;
 
 			newItem = $.parseHTML(html);
+			$(newItem).attr('itemno', s.counter);
 			$(newItem).data('itemno', s.counter);
 			$(newItem).css({
 				'margin' : 0
@@ -388,9 +418,28 @@
 			return(removed);
 		}
 
+		function update(no, html, queue) {
+			queue = queue || false;
+
+			itemNew = $.parseHTML(html);
+			$(itemNew).attr('itemno', no);
+			$(itemNew).data('itemno', no);
+			$(itemNew).css({
+				'margin' : 0
+			});
+
+			if(queue) {
+				s.queue.update[no] = itemNew;
+			} else {
+				itemCurrent = s.targ.children('[itemno="' + no + '"]').eq(0);
+				$(itemCurrent).replaceWith(itemNew);
+			}
+		}
+
 		return {
 			add: function(html, queue) { return(add(html, queue)); },
 			remove: function(no, queue) { return(remove(no, queue)); },
+			update: function(no, html, queue) { return(update(no, html, queue)); },
 			up: function() { moveDir('up'); },
 			down: function() { moveDir('down'); },
 			start: start,
