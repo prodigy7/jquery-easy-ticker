@@ -46,7 +46,10 @@
 		s.queue = {};
 		s.queue.add = new Array;
 		s.queue.remove = new Array;
-		s.dummyCount = 0;
+		s.dummy = {
+			init: 0,
+			current: 0,
+		}
 
 		init();
 		start();
@@ -86,10 +89,11 @@
 		function init() {
 
 			if(s.opts.dummy.use) {
-				s.dummyCount = Math.floor($(document).height() / s.opts.dummy.height);
+				s.dummy.init = Math.floor($(document).height() / s.opts.dummy.height);
+				s.dummy.current = s.dummy.init;
 
 				var counter = 0;
-				while(counter < s.dummyCount) {
+				while(counter < s.dummy.current) {
 
 					// create an element with an object literal, defining properties
 					var $dummy = $('<' + s.opts.dummy.html + '>', { html: '&nbsp;', data: {dummy: true}, style: 'height: ' + s.opts.dummy.height + 'px' });
@@ -204,8 +208,20 @@
 			}
 			var selChild = s.targ.children(sel);
 
-			if(s.targ.children(':last-child').data('dummy') && (s.dummyCount < $(el).find(':data(dummy)').length)) {
-				s.targ.children(':last-child').remove();
+			if(s.targ.children(':last-child').data('dummy')) {
+				if(s.dummy.current < $(el).find(':data(dummy)').length) {
+					s.targ.children(':last-child').remove();
+				}
+
+				if(s.dummy.init > s.targ.children().length) {
+					// create an element with an object literal, defining properties
+					var $dummy = $('<' + s.opts.dummy.html + '>', { html: '&nbsp;', data: {dummy: true}, style: 'height: ' + s.opts.dummy.height + 'px' });
+
+					// add the element to the body
+					s.targ.append($dummy);
+
+					s.dummy.current++;
+				}
 			}
 
 			// Move done, trigger add and remove if neccessary
@@ -327,7 +343,9 @@
 				'margin' : 0
 			});
 
-			s.dummyCount--;
+			if(s.dummy.current > 0) {
+				s.dummy.current--;
+			}
 
 			if($(el).find(':data(dummy)').length) {
 				s.targ.append(newItem);
