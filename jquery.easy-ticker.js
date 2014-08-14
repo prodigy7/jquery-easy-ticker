@@ -8,14 +8,15 @@
 ;(function($, window, document, undefined) {
 
 	var name = "easyTicker", defaults = {
-		needFocus: false,
-		direction: 'up',
-		easing: 'swing',
-		speed: 'slow',
-		interval: 2000,
+		mode: 'easing',		// Define animation mode. Values: 'easing' | 'continuous'
+		needFocus: false,	// If set, window need no focus for animate ticket. Values: true |false
+		direction: 'up',	// Directory for scrolling ticket. Values: 'up' | 'down'
+		easing: 'linear',	// If mode 'easing', define animation behaviour. Values: See jquery UI documentation
+		speed: 'slow',		// Define animation speed. Values: 'slow' | 'normal | 'fast' | <integer> (for ms)
+		interval: 2000,		// If mode 'easing', interval between animations. Values: Integer value
 		height: 'auto',
 		visible: 0,
-		mousePause: 1,
+		mousePause: 1,		// Define pause of animation if mouse is over item
 		controls: {
 			up: '',
 			down: '',
@@ -110,11 +111,21 @@
 		} // Init Method
 
 		function start() {
-			s.timer = setInterval(function() {
-				if(s.winFocus == 1 || !s.opts.needFocus) {
-					move(s.opts.direction);
-				}
-			}, s.opts.interval);
+			switch(s.opts.mode) {
+				case 'easing':
+					s.timer = setInterval(function() {
+						if(s.winFocus == 1 || !s.opts.needFocus) {
+							move(s.opts.direction);
+						}
+					}, s.opts.interval);
+				break;
+
+				case 'continuous':
+					if(s.winFocus == 1 || !s.opts.needFocus) {
+						move(s.opts.direction);
+					}
+				break;
+			}
 
 			$(s.opts.controls.toggle).addClass('et-run').html(s.opts.controls.stopText);
 
@@ -153,47 +164,68 @@
 
 				adjHeight();
 
-				// Move done, trigger add and remove if neccessary
-				if(s.queue.add) {
-					if(dir == 'up') {
-						if(selChild.data('itemno') == lastItemNo()) {
-							$.each(s.queue.add, function(no, html) {
-								s.targ.append(html);
-							});
-						}
-					} else {
-						if(selChild.data('itemno') == firstItemNo()) {
-							$.each(s.queue.add, function(no, html) {
-								s.targ.append(html);
-							});
-						}
-					}
+				handleQueue();
+
+				if(s.opts.mode == 'continuous') {
+					move(dir);
 				}
 
-				if(s.queue.remove) {
-					itemLast = s.targ.children(':last-child').data('itemno')
-					console.log(itemLast);
-					console.log(s.queue.remove);
-
-					if(typeof(s.queue.remove[itemLast]) == 'object') {
-						itemHtml = s.queue.remove[itemLast];
-						$(itemHtml).remove();
-						delete s.queue.remove[itemLast]
-					}
-
-					// Cleanup from undefined entries
-					var cQueueRemove = new Array;
-					$.each(s.queue.remove, function(no, html) {
-						if(typeof(html) == 'object') {
-							cQueueRemove[no] = html;
-						}
-					});
-					s.queue.remove = cQueueRemove;
-
-				}
 
 			});
 		}// Move
+
+		function handleQueue() {
+
+			var dir = s.opts.direction;
+
+			if(dir == 'up') {
+				sel = ':first-child';
+				eq = '-=';
+				appType = 'appendTo';
+			} else {
+				sel = ':last-child';
+				eq = '+=';
+				appType = 'prependTo';
+			}
+
+			var selChild = s.targ.children(sel);
+
+			// Move done, trigger add and remove if neccessary
+			if(s.queue.add) {
+				if(dir == 'up') {
+					if(selChild.data('itemno') == lastItemNo()) {
+						$.each(s.queue.add, function(no, html) {
+							s.targ.append(html);
+						});
+					}
+				} else {
+					if(selChild.data('itemno') == firstItemNo()) {
+						$.each(s.queue.add, function(no, html) {
+							s.targ.append(html);
+						});
+					}
+				}
+			}
+
+			if(s.queue.remove) {
+				itemLast = s.targ.children(':last-child').data('itemno')
+
+				if(typeof(s.queue.remove[itemLast]) == 'object') {
+					itemHtml = s.queue.remove[itemLast];
+					$(itemHtml).remove();
+					delete s.queue.remove[itemLast]
+				}
+
+				// Cleanup from undefined entries
+				var cQueueRemove = new Array;
+				$.each(s.queue.remove, function(no, html) {
+					if(typeof(html) == 'object') {
+						cQueueRemove[no] = html;
+					}
+				});
+				s.queue.remove = cQueueRemove;
+			}
+		}
 
 		function firstItemNo() {
 			var number;
