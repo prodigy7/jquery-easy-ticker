@@ -8,6 +8,7 @@
 ;(function($, window, document, undefined) {
 
 	var name = "easyTicker", defaults = {
+		needFocus: false,
 		direction: 'up',
 		easing: 'swing',
 		speed: 'slow',
@@ -94,7 +95,7 @@
 
 		function start(){
 			s.timer = setInterval(function(){
-				if(s.winFocus == 1){
+				if(s.winFocus == 1 || !s.opts.needFocus){
 					move(s.opts.direction);
 				}
 			}, s.opts.interval);
