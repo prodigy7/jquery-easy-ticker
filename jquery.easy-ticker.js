@@ -14,6 +14,11 @@
 		easing: 'linear',	// If mode 'easing', define animation behaviour. Values: See jquery UI documentation
 		speed: 'slow',		// Define animation speed. Values: 'slow' | 'normal | 'fast' | <integer> (for ms)
 		interval: 2000,		// If mode 'easing', interval between animations. Values: Integer value
+		dummy: {
+			use: true,	// If set, during init dummy containers are created with given (following) height for get a smoother scroll effect
+			height: 100,	// Height of the dummy container
+			html: 'li',	// HTML Tag name for item
+		},
 		height: 'auto',
 		visible: 0,
 		mousePause: 1,		// Define pause of animation if mouse is over item
@@ -41,6 +46,7 @@
 		s.queue = {};
 		s.queue.add = new Array;
 		s.queue.remove = new Array;
+		s.dummyCount = 0;
 
 		init();
 		start();
@@ -78,6 +84,22 @@
 		});
 
 		function init() {
+
+			if(s.opts.dummy.use) {
+				s.dummyCount = Math.floor($(document).height() / s.opts.dummy.height);
+
+				var counter = 0;
+				while(counter < s.dummyCount) {
+
+					// create an element with an object literal, defining properties
+					var $dummy = $('<' + s.opts.dummy.html + '>', { html: '&nbsp;', data: {dummy: true}, style: 'height: ' + s.opts.dummy.height + 'px' });
+
+					// add the element to the body
+					s.targ.append($dummy);
+
+					counter++;
+				}
+			}
 
 			s.elem.children().css('margin', 0).children().css('margin', 0);
 
@@ -169,26 +191,22 @@
 				if(s.opts.mode == 'continuous') {
 					move(dir);
 				}
-
-
 			});
 		}// Move
 
 		function handleQueue() {
 
 			var dir = s.opts.direction;
-
 			if(dir == 'up') {
 				sel = ':first-child';
-				eq = '-=';
-				appType = 'appendTo';
 			} else {
 				sel = ':last-child';
-				eq = '+=';
-				appType = 'prependTo';
 			}
-
 			var selChild = s.targ.children(sel);
+
+			if(s.targ.children(':last-child').data('dummy') && (s.dummyCount < $(el).find(':data(dummy)').length)) {
+				s.targ.children(':last-child').remove();
+			}
 
 			// Move done, trigger add and remove if neccessary
 			if(s.queue.add) {
@@ -309,7 +327,11 @@
 				'margin' : 0
 			});
 
-			if(queue) {
+			s.dummyCount--;
+
+			if($(el).find(':data(dummy)').length) {
+				s.targ.append(newItem);
+			} else if(queue) {
 				s.queue.add[s.counter] = newItem;
 			} else {
 				s.targ.append(newItem);
