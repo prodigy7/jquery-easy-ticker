@@ -37,6 +37,9 @@
 		s.mHover = 0;
 		s.winFocus = 1;
 		s.counter = 0;
+		s.queue = {};
+		s.queue.add = new Array;
+		s.queue.remove = new Array;
 
 		init();
 		start();
@@ -77,11 +80,17 @@
 
 			s.elem.children().css('margin', 0).children().css('margin', 0);
 
-			s.targ.children().each(function() {
-				$(this).data('itemno', s.counter);
-				s.counter++;
-				console.log(s.counter);
-			});
+			if(s.opts.direction == 'up') {
+				s.targ.children().each(function() {
+					$(this).data('itemno', s.counter);
+					s.counter++;
+				});
+			} else {
+				s.targ.children().each(function() {
+					s.counter++;
+					$(this).data('itemno', s.targ.children().length - s.counter);
+				});
+			}
 
 			s.elem.css({
 				position : 'relative',
@@ -144,8 +153,75 @@
 
 				adjHeight();
 
+				// Move done, trigger add and remove if neccessary
+				if(s.queue.add) {
+					if(dir == 'up') {
+						if(selChild.data('itemno') == lastItemNo()) {
+							$.each(s.queue.add, function(no, html) {
+								s.targ.append(html);
+							});
+						}
+					} else {
+						if(selChild.data('itemno') == firstItemNo()) {
+							$.each(s.queue.add, function(no, html) {
+								s.targ.append(html);
+							});
+						}
+					}
+				}
+
+				if(s.queue.remove) {
+					itemLast = s.targ.children(':last-child').data('itemno')
+					console.log(itemLast);
+					console.log(s.queue.remove);
+
+					if(typeof(s.queue.remove[itemLast]) == 'object') {
+						itemHtml = s.queue.remove[itemLast];
+						$(itemHtml).remove();
+						delete s.queue.remove[itemLast]
+					}
+
+					// Cleanup from undefined entries
+					var cQueueRemove = new Array;
+					$.each(s.queue.remove, function(no, html) {
+						if(typeof(html) == 'object') {
+							cQueueRemove[no] = html;
+						}
+					});
+					s.queue.remove = cQueueRemove;
+
+				}
+
 			});
 		}// Move
+
+		function firstItemNo() {
+			var number;
+			s.targ.children().each(function() {
+				if(typeof(number) == 'undefined') {
+					number = $(this).data('itemno');
+				}
+
+				if(number > $(this).data('itemno')) {
+					number = $(this).data('itemno');
+				}
+			});
+			return(number);
+		}
+
+		function lastItemNo() {
+			var number;
+			s.targ.children().each(function() {
+				if(typeof(number) == 'undefined') {
+					number = $(this).data('itemno');
+				}
+
+				if(number < $(this).data('itemno')) {
+					number = $(this).data('itemno');
+				}
+			});
+			return(number);
+		}
 
 		function moveDir(dir) {
 			stop();
@@ -191,36 +267,58 @@
 			}
 		}
 
-		function addItem(html) {
-			newItem = $.parseHTML(html);
+		function add(html, queue) {
 
-			s.counter++;
+			queue = queue || false;
+
+			newItem = $.parseHTML(html);
 			$(newItem).data('itemno', s.counter);
 			$(newItem).css({
 				'margin' : 0
 			});
 
-			if(s.opts.direction == 'up') {
-				s.targ.append(newItem);
+			if(queue) {
+				s.queue.add[s.counter] = newItem;
 			} else {
+				s.targ.append(newItem);
 			}
+
+			s.counter++;
 			return($(newItem));
 		}
 
-		function removeItem(no) {
+		function remove(no, queue) {
+
+			queue = queue || false;
+
 			var removed = false;
 			s.targ.children().each(function() {
 				if($(this).data('itemno') == no) {
-					$(this).remove();
-					removed = true;
+
+					if(queue) {
+						if(typeof(s.queue.remove[$(this).data('itemno')]) == 'object') {
+							removed = false;
+						} else {
+							s.queue.remove[$(this).data('itemno')] = $(this);
+							removed = true;
+						}
+					} else {
+						if(typeof(s.queue.remove[$(this).data('itemno')]) == 'object') {
+							delete s.queue.remove[$(this).data('itemno')]
+						} 
+						$(this).remove();
+						removed = true;
+					}
+
 				}
 			});
+
 			return(removed);
 		}
 
 		return {
-			addItem: function(html) { return(addItem(html)); },
-			removeItem: function(no) { return(removeItem(no)); },
+			add: function(html, queue) { return(add(html, queue)); },
+			remove: function(no, queue) { return(remove(no, queue)); },
 			up: function() { moveDir('up'); },
 			down: function() { moveDir('down'); },
 			start: start,
