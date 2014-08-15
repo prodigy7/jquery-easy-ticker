@@ -257,10 +257,13 @@
 				if(dir == 'up') {
 					if(selChild.data('itemno') == firstItemNo()) {
 						$.each(s.queue.add, function(no, data) {
-							s.targ.append(data[0]);
 
-							if(typeof(data[1]) == 'function') {
-								data[1].call(this, no, data[0]);
+							if(typeof(data) == 'object') {
+								s.targ.append(data[0]);
+
+								if(typeof(data[1]) == 'function') {
+									data[1].call(this, no, data[0]);
+								}
 							}
 
 							delete s.queue.add[no]
@@ -269,10 +272,13 @@
 				} else {
 					if(selChild.data('itemno') == lastItemNo()) {
 						$.each(s.queue.add.reverse(), function(no, data) {
-							s.targ.append(data[0]);
 
-							if(typeof(data[1]) == 'function') {
-								data[1].call(this, no, data[0]);
+							if(typeof(data) == 'object') {
+								s.targ.append(data[0]);
+
+								if(typeof(data[1]) == 'function') {
+									data[1].call(this, no, data[0]);
+								}
 							}
 
 							delete s.queue.add[no]
