@@ -444,7 +444,6 @@
 
 			if(queue) {
 				s.queue.add[s.counter] = new Array(newItem, callback);
-				console.log(s.queue.add);
 			} else {
 				s.targ.append(newItem);
 
