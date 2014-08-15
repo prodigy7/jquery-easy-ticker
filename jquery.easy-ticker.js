@@ -98,12 +98,19 @@
 		function init() {
 
 			if(s.opts.dummy.use) {
-				s.dummy.init = Math.floor($(document).height() / s.opts.dummy.height);
+				s.dummy.init = Math.floor($(window).height() / s.opts.dummy.height);
 				s.dummy.current = s.dummy.init;
+
+				if(s.dummy.current <= s.targ.children().length) {
+					s.dummy.init = 0;
+					s.dummy.current = s.dummy.init;
+				} else {
+					s.dummy.init = s.targ.children().length - s.dummy.current;
+					s.dummy.current = s.dummy.init;
+				}
 
 				var counter = 0;
 				while(counter < s.dummy.current) {
-
 					// create an element with an object literal, defining properties
 					var $dummy = $('<' + s.opts.dummy.html + '>', { html: '&nbsp;', data: {dummy: true}, style: 'height: ' + s.opts.dummy.height + 'px' });
 
