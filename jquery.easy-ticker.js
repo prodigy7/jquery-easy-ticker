@@ -255,7 +255,7 @@
 			// Move done, trigger add and remove if neccessary
 			if(s.queue.add) {
 				if(dir == 'up') {
-					if(selChild.data('itemno') == lastItemNo()) {
+					if(selChild.data('itemno') == firstItemNo()) {
 						$.each(s.queue.add, function(no, html) {
 							s.targ.append(html);
 
@@ -414,9 +414,7 @@
 				'margin' : 0
 			});
 
-			if(s.dummy.current == s.targ.children().length) {
-				s.targ.append(newItem);
-			} else if(queue) {
+			if(queue) {
 				s.queue.add[s.counter] = newItem;
 			} else {
 				s.targ.append(newItem);
@@ -478,9 +476,9 @@
 		}
 
 		return {
-			add: function(html, queue) { return(add(html, queue)); },
-			remove: function(no, queue) { return(remove(no, queue)); },
-			update: function(no, html, queue) { return(update(no, html, queue)); },
+			add: function(html, queue)		{ return(add(html, queue)); },
+			remove: function(no, queue)		{ return(remove(no, queue)); },
+			update: function(no, html, queue)	{ return(update(no, html, queue)); },
 			up: function() { return(moveDir('up')); },
 			down: function() { return(moveDir('down')); },
 			start: start,
