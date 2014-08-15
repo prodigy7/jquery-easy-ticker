@@ -256,16 +256,24 @@
 			if(s.queue.add) {
 				if(dir == 'up') {
 					if(selChild.data('itemno') == firstItemNo()) {
-						$.each(s.queue.add, function(no, html) {
-							s.targ.append(html);
+						$.each(s.queue.add, function(no, data) {
+							s.targ.append(data[0]);
+
+							if(typeof(data[1]) == 'function') {
+								data[1].call(this, data[0]);
+							}
 
 							delete s.queue.add[no]
 						});
 					}
 				} else {
 					if(selChild.data('itemno') == lastItemNo()) {
-						$.each(s.queue.add.reverse(), function(no, html) {
-							s.targ.append(html);
+						$.each(s.queue.add.reverse(), function(no, data) {
+							s.targ.append(data[0]);
+
+							if(typeof(data[1]) == 'function') {
+								data[1].call(this, data[0]);
+							}
 
 							delete s.queue.add[no]
 						});
@@ -274,9 +282,12 @@
 
 				// Cleanup from undefined entries
 				var cQueueAdd = new Array;
-				$.each(s.queue.add, function(no, html) {
-					if(typeof(html) == 'object') {
-						cQueueAdd[no] = html;
+
+				$.each(s.queue.add, function(no, data) {
+					if(typeof(data) == 'object') {
+						if(typeof(data[0]) == 'object') {
+							cQueueAdd[no] = data;
+						}
 					}
 				});
 				s.queue.add = cQueueAdd;
@@ -286,16 +297,24 @@
 				itemLast = s.targ.children(':last-child');
 
 				if(typeof(s.queue.remove[itemLast.data('itemno')]) == 'object') {
-					itemHtml = s.queue.remove[itemLast.data('itemno')];
+					data = s.queue.remove[itemLast.data('itemno')]
+					itemHtml = data[0];
 					$(itemHtml).remove();
+
+					if(typeof(data[1]) == 'function') {
+						data[1].call(this, true);
+					}
+
 					delete s.queue.remove[itemLast.data('itemno')]
 				}
 
 				// Cleanup from undefined entries
 				var cQueueRemove = new Array;
-				$.each(s.queue.remove, function(no, html) {
-					if(typeof(html) == 'object') {
-						cQueueRemove[no] = html;
+				$.each(s.queue.remove, function(no, data) {
+					if(typeof(data) == 'object') {
+						if(typeof(data[0]) == 'object') {
+							cQueueRemove[no] = data;
+						}
 					}
 				});
 				s.queue.remove = cQueueRemove;
@@ -305,16 +324,25 @@
 
 				itemLast = s.targ.children(':last-child');
 				if(typeof(s.queue.update[itemLast.data('itemno')]) == 'object') {
+					data = s.queue.update[itemLast.data('itemno')];
+
 					itemCurrent = itemLast;
-					$(itemCurrent).replaceWith(s.queue.update[itemLast.data('itemno')]);
+					$(itemCurrent).replaceWith(data[0]);
+
+					if(typeof(data[1]) == 'function') {
+						data[1].call(this, data[0]);
+					}
+
 					delete s.queue.update[itemLast.data('itemno')]
 				}
 
 				// Cleanup from undefined entries
 				var cQueueUpdate = new Array;
-				$.each(s.queue.update, function(no, html) {
-					if(typeof(html) == 'object') {
-						cQueueUpdate[no] = html;
+				$.each(s.queue.update, function(no, data) {
+					if(typeof(data) == 'object') {
+						if(typeof(data[0]) == 'object') {
+							cQueueUpdate[no] = data;
+						}
 					}
 				});
 				s.queue.update = cQueueUpdate;
@@ -403,7 +431,7 @@
 			return(true);
 		}
 
-		function add(html, queue) {
+		function add(html, queue, callback) {
 
 			queue = queue || false;
 
@@ -415,9 +443,14 @@
 			});
 
 			if(queue) {
-				s.queue.add[s.counter] = newItem;
+				s.queue.add[s.counter] = new Array(newItem, callback);
+				console.log(s.queue.add);
 			} else {
 				s.targ.append(newItem);
+
+				if(typeof(callback) == 'function') {
+					callback();
+				}
 			}
 
 			if(s.dummy.current > 0) {
@@ -428,7 +461,7 @@
 			return($(newItem));
 		}
 
-		function remove(no, queue) {
+		function remove(no, queue, callback) {
 
 			queue = queue || false;
 
@@ -440,7 +473,7 @@
 						if(typeof(s.queue.remove[$(this).data('itemno')]) == 'object') {
 							removed = false;
 						} else {
-							s.queue.remove[$(this).data('itemno')] = $(this);
+							s.queue.remove[$(this).data('itemno')] = new Array($(this), callback);
 							removed = true;
 						}
 					} else {
@@ -449,6 +482,10 @@
 						} 
 						$(this).remove();
 						removed = true;
+
+						if(typeof(callback) == 'function') {
+							callback();
+						}
 					}
 
 				}
@@ -457,7 +494,7 @@
 			return(removed);
 		}
 
-		function update(no, html, queue) {
+		function update(no, html, queue, callback) {
 			queue = queue || false;
 
 			itemNew = $.parseHTML(html);
@@ -468,17 +505,21 @@
 			});
 
 			if(queue) {
-				s.queue.update[no] = itemNew;
+				s.queue.update[no] = new Array(itemNew, callback);
 			} else {
 				itemCurrent = s.targ.children('[itemno="' + no + '"]').eq(0);
 				$(itemCurrent).replaceWith(itemNew);
+
+				if(typeof(callback) == 'function') {
+					callback();
+				}
 			}
 		}
 
 		return {
-			add: function(html, queue)		{ return(add(html, queue)); },
-			remove: function(no, queue)		{ return(remove(no, queue)); },
-			update: function(no, html, queue)	{ return(update(no, html, queue)); },
+			add: function(html, queue, callback)		{ return(add(html, queue, callback)); },
+			remove: function(no, queue, callback)		{ return(remove(no, queue, callback)); },
+			update: function(no, html, queue, callback)	{ return(update(no, html, queue, callback)); },
 			up: function() { return(moveDir('up')); },
 			down: function() { return(moveDir('down')); },
 			start: start,
