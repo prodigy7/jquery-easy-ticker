@@ -260,7 +260,7 @@
 							s.targ.append(data[0]);
 
 							if(typeof(data[1]) == 'function') {
-								data[1].call(this, data[0]);
+								data[1].call(this, no, data[0]);
 							}
 
 							delete s.queue.add[no]
@@ -272,7 +272,7 @@
 							s.targ.append(data[0]);
 
 							if(typeof(data[1]) == 'function') {
-								data[1].call(this, data[0]);
+								data[1].call(this, no, data[0]);
 							}
 
 							delete s.queue.add[no]
@@ -302,7 +302,7 @@
 					$(itemHtml).remove();
 
 					if(typeof(data[1]) == 'function') {
-						data[1].call(this, true);
+						data[1].call(this, itemLast.data('itemno'), true);
 					}
 
 					delete s.queue.remove[itemLast.data('itemno')]
@@ -448,7 +448,7 @@
 				s.targ.append(newItem);
 
 				if(typeof(callback) == 'function') {
-					callback();
+					callback.call(this, s.counter, html);
 				}
 			}
 
@@ -483,7 +483,7 @@
 						removed = true;
 
 						if(typeof(callback) == 'function') {
-							callback();
+							callback.call(this, no, true);
 						}
 					}
 
@@ -510,7 +510,7 @@
 				$(itemCurrent).replaceWith(itemNew);
 
 				if(typeof(callback) == 'function') {
-					callback();
+					callback.call(this, no, itemCurrent);
 				}
 			}
 		}
