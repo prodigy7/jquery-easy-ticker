@@ -98,14 +98,14 @@
 		function init() {
 
 			if(s.opts.dummy.use) {
-				s.dummy.init = Math.floor($(window).height() / s.opts.dummy.height);
+				s.dummy.init = Math.floor($(window).height() / s.opts.dummy.height) + 1;
 				s.dummy.current = s.dummy.init;
 
 				if(s.dummy.current <= s.targ.children().length) {
 					s.dummy.init = 0;
 					s.dummy.current = s.dummy.init;
 				} else {
-					s.dummy.init = s.targ.children().length - s.dummy.current;
+					s.dummy.init = s.dummy.current - s.targ.children().length;
 					s.dummy.current = s.dummy.init;
 				}
 
@@ -115,7 +115,7 @@
 					var $dummy = $('<' + s.opts.dummy.html + '>', { html: '&nbsp;', data: {dummy: true}, style: 'height: ' + s.opts.dummy.height + 'px' });
 
 					// add the element to the body
-					s.targ.append($dummy);
+					s.targ.prepend($dummy);
 
 					counter++;
 				}
