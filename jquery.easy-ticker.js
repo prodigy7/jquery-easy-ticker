@@ -69,22 +69,30 @@
 				if(s.timerTemp !== 0)
 					start();
 			});
+
+			return(true);
 		}
 
 		$(s.opts.controls.up).on('click', function(e) {
 			e.preventDefault();
 			moveDir('up');
+
+			return(true);
 		});
 
 		$(s.opts.controls.down).on('click', function(e) {
 			e.preventDefault();
 			moveDir('down');
+
+			return(true);
 		});
 
 		$(s.opts.controls.toggle).on('click', function(e) {
 			e.preventDefault();
 			if(s.timer == 0) start();
 			else stop();
+
+			return(true);
 		});
 
 		function init() {
@@ -135,6 +143,7 @@
 				adjHeight();
 			}, 100);
 
+			return(true);
 		} // Init Method
 
 		function start() {
@@ -156,12 +165,15 @@
 
 			$(s.opts.controls.toggle).addClass('et-run').html(s.opts.controls.stopText);
 
+			return(true);
 		} // Start method
 
 		function stop() {
 			clearInterval(s.timer);
 			s.timer = 0;
 			$(s.opts.controls.toggle).removeClass('et-run').html(s.opts.controls.playText);
+
+			return(true);
 		}// Stop
 
 		function move(dir) {
@@ -197,6 +209,8 @@
 					move(dir);
 				}
 			});
+
+			return(true);
 		}// Move
 
 		function handleQueue() {
@@ -288,6 +302,8 @@
 				});
 				s.queue.update = cQueueUpdate;
 			}
+
+			return(true);
 		}
 
 		function firstItemNo() {
@@ -322,6 +338,8 @@
 			stop();
 			if(dir == 'up') move('up'); else move('down'); 
 			// start();
+
+			return(true);
 		}
 
 		function fullHeight() {
@@ -338,6 +356,8 @@
 				'display' : tempDisp,
 				'height' : height
 			});
+
+			return(true);
 		}
 
 		function visHeight(anim) {
@@ -348,18 +368,22 @@
 
 			if(anim == 1) {
 				s.elem.stop(true, true).animate({height: wrapHeight}, s.opts.speed);
-			}else{
+			} else {
 				s.elem.css('height', wrapHeight);
 			}
+
+			return(true);
 		}
 
 		function adjHeight() {
 			if(s.opts.height == 'auto' && s.opts.visible != 0) {
 				anim = arguments.callee.caller.name == 'init' ? 0 : 1;
 				visHeight(anim);
-			}else if(s.opts.height == 'auto') {
+			} else if(s.opts.height == 'auto') {
 				fullHeight();
 			}
+
+			return(true);
 		}
 
 		function add(html, queue) {
@@ -440,8 +464,8 @@
 			add: function(html, queue) { return(add(html, queue)); },
 			remove: function(no, queue) { return(remove(no, queue)); },
 			update: function(no, html, queue) { return(update(no, html, queue)); },
-			up: function() { moveDir('up'); },
-			down: function() { moveDir('down'); },
+			up: function() { return(moveDir('up')); },
+			down: function() { return(moveDir('down')); },
 			start: start,
 			stop: stop,
 			options: s.opts
