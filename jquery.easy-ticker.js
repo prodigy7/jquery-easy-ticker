@@ -47,6 +47,10 @@
 		s.queue.add = new Array;
 		s.queue.remove = new Array;
 		s.queue.update = new Array;
+		s.callback = {
+			first: undefined,
+			last: undefined
+		};
 		s.dummy = {
 			init: 0,
 			current: 0,
@@ -190,28 +194,39 @@
 		}// Stop
 
 		function move(dir) {
-			var sel, eq, appType;
+			var sel, eq, appType, leaderChild;
 
 			if(!s.elem.is(':visible')) return;
 
 			if(dir == 'up') {
-				sel = ':first-child';
 				eq = '-=';
 				appType = 'appendTo';
+				leaderChild = s.targ.children(':first-child');
 			} else {
-				sel = ':last-child';
 				eq = '+=';
 				appType = 'prependTo';
+				leaderChild = s.targ.children(':last-child');
 			}
 
-			var selChild = s.targ.children(sel);
-			var height = selChild.outerHeight();
+			var height = leaderChild.outerHeight();
 
 			s.targ.stop(true, true).animate({
 				'top': eq + height + "px"
 			}, s.opts.speed, s.opts.easing, function() {
 
-				selChild.hide()[appType](s.targ).fadeIn();
+				leaderChild.hide(function() {
+					if($(this).data('itemno') >= 0) {
+						if(typeof(s.callback.last) == 'function') {
+							s.callback.last.call(this, leaderChild);
+						}
+					}
+				})[appType](s.targ).fadeIn(function() {
+					if($(this).data('itemno') >= 0) {
+						if(typeof(s.callback.first) == 'function') {
+							s.callback.first.call(this, leaderChild);
+						}
+					}
+				});
 				s.targ.css('top', 0);
 
 				adjHeight();
@@ -234,7 +249,7 @@
 			} else {
 				sel = ':first-child';
 			}
-			var selChild = s.targ.children(sel);
+			var closeChild = s.targ.children(sel);
 
 			if(s.targ.children(':last-child').data('dummy')) {
 				if(s.dummy.current < $(el).find(':data(dummy)').length) {
@@ -255,7 +270,7 @@
 			// Move done, trigger add and remove if neccessary
 			if(s.queue.add) {
 				if(dir == 'up') {
-					if(selChild.data('itemno') == firstItemNo()) {
+					if(closeChild.data('itemno') == firstItemNo()) {
 						$.each(s.queue.add, function(no, data) {
 
 							if(typeof(data) == 'object') {
@@ -264,13 +279,18 @@
 								if(typeof(data[1]) == 'function') {
 									data[1].call(this, no, data[0]);
 								}
+
+								if(typeof(s.callback.first) == 'function') {
+									itemEl = s.targ.children('[itemno="' + no + '"]').eq(0);
+									s.callback.first.call(itemEl, $(itemEl));
+								}
 							}
 
 							delete s.queue.add[no]
 						});
 					}
 				} else {
-					if(selChild.data('itemno') == lastItemNo()) {
+					if(closeChild.data('itemno') == lastItemNo()) {
 						$.each(s.queue.add.reverse(), function(no, data) {
 
 							if(typeof(data) == 'object') {
@@ -278,6 +298,11 @@
 
 								if(typeof(data[1]) == 'function') {
 									data[1].call(this, no, data[0]);
+								}
+
+								if(typeof(s.callback.first) == 'function') {
+									itemEl = s.targ.children('[itemno="' + no + '"]').eq(0);
+									s.callback.first.call(itemEl, $(itemEl));
 								}
 							}
 
@@ -437,6 +462,18 @@
 			return(true);
 		}
 
+		function onFirst(callback) {
+			if(typeof(callback) == 'function') {
+				s.callback.first = callback;
+			}
+		}
+
+		function onLast(callback) {
+			if(typeof(callback) == 'function') {
+				s.callback.last = callback;
+			}
+		}
+
 		function add(html, queue, callback) {
 
 			queue = queue || false;
@@ -522,6 +559,8 @@
 		}
 
 		return {
+			onFirst: function(callback)			{ return(onFirst(callback)); },
+			onLast: function(callback)			{ return(onLast(callback)); },
 			add: function(html, queue, callback)		{ return(add(html, queue, callback)); },
 			remove: function(no, queue, callback)		{ return(remove(no, queue, callback)); },
 			update: function(no, html, queue, callback)	{ return(update(no, html, queue, callback)); },
